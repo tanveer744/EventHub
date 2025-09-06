@@ -8,9 +8,31 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     const { collegeId, title, eventType, startsAt, endsAt, location } = req.body;
     
-    // Minimal validation
+    // Enhanced validation
     if (!collegeId || !title || !eventType || !startsAt || !endsAt || !location) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Validate collegeId is a number
+    if (isNaN(parseInt(collegeId))) {
+      return res.status(400).json({ error: 'College ID must be a valid number' });
+    }
+
+    // Validate dates
+    const startDate = new Date(startsAt);
+    const endDate = new Date(endsAt);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format for startsAt or endsAt' });
+    }
+
+    if (endDate <= startDate) {
+      return res.status(400).json({ error: 'Event end time must be after start time' });
+    }
+
+    // Validate event type
+    const validEventTypes = ['workshop', 'seminar', 'conference', 'meetup', 'competition', 'other'];
+    if (!validEventTypes.includes(eventType.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid event type' });
     }
 
     const query = `
@@ -21,8 +43,18 @@ router.post('/', async (req: Request, res: Response) => {
     
     const result = await pool.query(query, [collegeId, title, eventType, startsAt, endsAt, location]);
     res.json(result.rows[0]);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating event:', error);
+    
+    // Handle specific PostgreSQL errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const dbError = error as { code: string };
+      if (dbError.code === '23503') {
+        // Foreign key constraint violation (invalid college ID)
+        return res.status(400).json({ error: 'Invalid college ID' });
+      }
+    }
+    
     res.status(500).json({ error: 'Failed to create event' });
   }
 });
