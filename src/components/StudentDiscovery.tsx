@@ -24,6 +24,15 @@ interface Registration {
   registered_at: string;
 }
 
+interface Feedback {
+  id: number;
+  event_id: number;
+  student_id: number;
+  rating: number;
+  comment?: string;
+  given_at: string;
+}
+
 interface FormattedEvent {
   id: string;
   title: string;
@@ -88,6 +97,7 @@ export function StudentDiscovery() {
   const [regularEvents, setRegularEvents] = useState<FormattedEvent[]>([]);
   const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
   const [registrationLoading, setRegistrationLoading] = useState<Set<string>>(new Set());
+  const [submittedFeedbackIds, setSubmittedFeedbackIds] = useState<Set<string>>(new Set());
 
   // Mock student ID - in a real app this would come from authentication
   const CURRENT_STUDENT_ID = 1;
@@ -108,16 +118,33 @@ export function StudentDiscovery() {
     }
   };
 
+  // Fetch user's submitted feedback
+  const fetchUserFeedback = async () => {
+    try {
+      const response = await fetch(`/api/feedback?studentId=${CURRENT_STUDENT_ID}`);
+      
+      if (response.ok) {
+        const userFeedback: Feedback[] = await response.json();
+        const feedbackEventIds = userFeedback.map((feedback: Feedback) => feedback.event_id.toString());
+        
+        setSubmittedFeedbackIds(new Set(feedbackEventIds));
+      }
+    } catch (error) {
+      console.error('Error fetching user feedback:', error);
+    }
+  };
+
   // Fetch events from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch events and registrations in parallel
+        // Fetch events, registrations, and feedback in parallel
         const [eventsResponse] = await Promise.all([
           fetch('/api/events?collegeId=1'),
-          fetchUserRegistrations()
+          fetchUserRegistrations(),
+          fetchUserFeedback()
         ]);
         
         if (eventsResponse.ok) {
@@ -244,6 +271,9 @@ export function StudentDiscovery() {
       });
 
       if (response.ok) {
+        // Add to submitted feedback list
+        setSubmittedFeedbackIds(prev => new Set(prev).add(eventId));
+        
         toast({
           title: "Feedback Submitted!",
           description: "Thank you for your feedback. It helps us improve future events.",
@@ -334,6 +364,7 @@ export function StudentDiscovery() {
                   isRegistered={registeredEventIds.has(event.id)}
                   onRegister={() => handleRegister(event.id)}
                   onFeedback={(rating, comment) => handleFeedback(event.id, rating, comment)}
+                  hasFeedbackSubmitted={submittedFeedbackIds.has(event.id)}
                 />
               </div>
             ))}
@@ -386,6 +417,7 @@ export function StudentDiscovery() {
                 isRegistered={registeredEventIds.has(event.id)}
                 onRegister={() => handleRegister(event.id)}
                 onFeedback={(rating, comment) => handleFeedback(event.id, rating, comment)}
+                hasFeedbackSubmitted={submittedFeedbackIds.has(event.id)}
               />
             </div>
           ))}

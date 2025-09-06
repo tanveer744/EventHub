@@ -1,11 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { HeroSection } from '@/components/HeroSection';
 import { StudentDiscovery } from '@/components/StudentDiscovery';
 import { AdminDashboard } from '@/components/AdminDashboard';
 
 const Index = () => {
-  const [activeView, setActiveView] = useState<'student' | 'admin'>('student'); 
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Determine initial view based on URL
+  const getInitialView = () => {
+    if (location.pathname === '/admin') return 'admin';
+    return 'student';
+  };
+  
+  const [activeView, setActiveView] = useState<'student' | 'admin'>(getInitialView());
+
+  // Update URL when view changes
+  const handleViewChange = (newView: 'student' | 'admin') => {
+    setActiveView(newView);
+    navigate(newView === 'admin' ? '/admin' : '/student', { replace: true });
+  };
+
+  // Update view when URL changes (e.g., back button)
+  useEffect(() => {
+    const newView = location.pathname === '/admin' ? 'admin' : 'student';
+    if (newView !== activeView) {
+      setActiveView(newView);
+    }
+  }, [location.pathname, activeView]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
@@ -17,7 +41,7 @@ const Index = () => {
       </div>
 
       {/* Navigation */}
-      <Navigation activeView={activeView} onViewChange={setActiveView} />
+      <Navigation activeView={activeView} onViewChange={handleViewChange} />
 
       {/* Main Content */}
       <main className="relative pt-16">
@@ -38,7 +62,7 @@ const Index = () => {
       <nav className="fixed bottom-0 left-0 right-0 glass border-t border-white/20 lg:hidden z-40">
         <div className="flex items-center justify-around py-2">
           <button
-            onClick={() => setActiveView('student')}
+            onClick={() => handleViewChange('student')}
             className={`flex flex-col items-center p-3 rounded-xl transition-all ${
               activeView === 'student'
                 ? 'text-accent bg-accent/10'
@@ -48,27 +72,16 @@ const Index = () => {
             <span className="text-lg mb-1">🎉</span>
             <span className="text-xs font-medium">Discover</span>
           </button>
-          
           <button
-            onClick={() => setActiveView('admin')}
+            onClick={() => handleViewChange('admin')}
             className={`flex flex-col items-center p-3 rounded-xl transition-all ${
               activeView === 'admin'
                 ? 'text-accent bg-accent/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span className="text-lg mb-1">📊</span>
-            <span className="text-xs font-medium">Dashboard</span>
-          </button>
-          
-          <button className="flex flex-col items-center p-3 rounded-xl text-muted-foreground hover:text-foreground transition-all">
-            <span className="text-lg mb-1">📅</span>
-            <span className="text-xs font-medium">Events</span>
-          </button>
-          
-          <button className="flex flex-col items-center p-3 rounded-xl text-muted-foreground hover:text-foreground transition-all">
-            <span className="text-lg mb-1">👤</span>
-            <span className="text-xs font-medium">Profile</span>
+            <span className="text-lg mb-1">⚙️</span>
+            <span className="text-xs font-medium">Admin</span>
           </button>
         </div>
       </nav>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Eye, Plus, BarChart3 } from 'lucide-react';
+import { Calendar, MapPin, Eye, Plus, BarChart3, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Event {
@@ -84,7 +84,15 @@ const AdminEvents: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-white">Admin - Event Management</h1>
+          <div className="flex items-center gap-4">
+            <Link to="/admin">
+              <Button variant="outline" className="text-purple-600 border-purple-300 hover:bg-purple-50">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold text-white">Admin - Event Management</h1>
+          </div>
           <div className="flex gap-3">
             <Link to="/admin/reports">
               <Button variant="outline" className="text-purple-600 border-purple-300 hover:bg-purple-50">

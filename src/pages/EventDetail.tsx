@@ -3,8 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Calendar, MapPin, Users, MessageSquare } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -41,13 +39,6 @@ interface AttendanceUpdate {
   present: boolean;
 }
 
-interface FeedbackSubmission {
-  eventId: number;
-  studentId: number;
-  rating: number;
-  comment?: string;
-}
-
 interface FeedbackData {
   id: number;
   event_id: number;
@@ -72,7 +63,6 @@ const EventDetail: React.FC = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [attendanceUpdates, setAttendanceUpdates] = useState<{ [key: number]: boolean }>({});
-  const [feedbackData, setFeedbackData] = useState<{ [key: number]: { rating: string; comment: string } }>({});
 
   const fetchEventDetails = React.useCallback(async () => {
     try {
@@ -184,73 +174,6 @@ const EventDetail: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const handleFeedbackSubmit = async (studentId: number) => {
-    const feedback = feedbackData[studentId];
-    if (!feedback || !feedback.rating) {
-      toast({
-        title: "Error",
-        description: "Please select a rating",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventId: parseInt(id!),
-          studentId,
-          rating: parseInt(feedback.rating),
-          comment: feedback.comment || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit feedback');
-      }
-
-      // Update local state to show feedback was submitted
-      setRegistrations(prev => prev.map(reg => 
-        reg.student_id === studentId 
-          ? { 
-              ...reg, 
-              feedback: { 
-                rating: parseInt(feedback.rating), 
-                comment: feedback.comment,
-                given_at: new Date().toISOString()
-              }
-            }
-          : reg
-      ));
-
-      toast({
-        title: "Success",
-        description: "Feedback submitted successfully",
-      });
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit feedback",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateFeedbackData = (studentId: number, field: 'rating' | 'comment', value: string) => {
-    setFeedbackData(prev => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        [field]: value
-      }
-    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -391,49 +314,18 @@ const EventDetail: React.FC = () => {
                               {registration.feedback.comment && (
                                 <p className="text-purple-200 text-sm">{registration.feedback.comment}</p>
                               )}
+                              <p className="text-purple-300 text-xs mt-1">
+                                Submitted: {new Date(registration.feedback.given_at).toLocaleDateString()}
+                              </p>
                             </div>
                           ) : (
-                            <div className="space-y-2">
-                              <Select
-                                value={feedbackData[registration.student_id]?.rating || ''}
-                                onValueChange={(value) => 
-                                  updateFeedbackData(registration.student_id, 'rating', value)
-                                }
-                              >
-                                <SelectTrigger className="w-24 bg-white/10 border-white/30 text-white">
-                                  <SelectValue placeholder="Rate" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {[1, 2, 3, 4, 5].map(rating => (
-                                    <SelectItem key={rating} value={rating.toString()}>
-                                      {rating}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Textarea
-                                placeholder="Optional comment..."
-                                value={feedbackData[registration.student_id]?.comment || ''}
-                                onChange={(e) => 
-                                  updateFeedbackData(registration.student_id, 'comment', e.target.value)
-                                }
-                                className="bg-white/10 border-white/30 text-white placeholder:text-purple-300 min-h-[60px]"
-                                rows={2}
-                              />
+                            <div className="text-purple-300 text-sm">
+                              No feedback submitted
                             </div>
                           )}
                         </td>
                         <td className="py-4 px-2 text-center">
-                          {!registration.feedback && (
-                            <Button
-                              onClick={() => handleFeedbackSubmit(registration.student_id)}
-                              size="sm"
-                              className="bg-purple-600 hover:bg-purple-700 text-white"
-                              disabled={!feedbackData[registration.student_id]?.rating}
-                            >
-                              Submit
-                            </Button>
-                          )}
+                          <span className="text-purple-300 text-sm">Admin View</span>
                         </td>
                       </tr>
                     ))}

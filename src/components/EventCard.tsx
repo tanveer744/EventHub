@@ -30,9 +30,10 @@ interface EventCardProps {
   isLoading?: boolean;
   onRegister?: () => void;
   onFeedback?: (rating: number, comment?: string) => void;
+  hasFeedbackSubmitted?: boolean;
 }
 
-export function EventCard({ event, variant = 'default', className = '', isRegistered = false, isLoading = false, onRegister, onFeedback }: EventCardProps) {
+export function EventCard({ event, variant = 'default', className = '', isRegistered = false, isLoading = false, onRegister, onFeedback, hasFeedbackSubmitted = false }: EventCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState<string>('');
@@ -142,52 +143,58 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
               )}
             </Button>
             {event.status === 'completed' && onFeedback && (
-              <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-9 w-9 glass hover:glass-strong">
-                    <Star className="w-4 h-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="glass border border-white/20">
-                  <DialogHeader>
-                    <DialogTitle>Rate This Event</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="rating">Rating (1-5)</Label>
-                      <Select value={feedbackRating} onValueChange={setFeedbackRating}>
-                        <SelectTrigger className="glass">
-                          <SelectValue placeholder="Select rating" />
-                        </SelectTrigger>
-                        <SelectContent className="glass border border-white/20">
-                          <SelectItem value="1">1 - Poor</SelectItem>
-                          <SelectItem value="2">2 - Fair</SelectItem>
-                          <SelectItem value="3">3 - Good</SelectItem>
-                          <SelectItem value="4">4 - Very Good</SelectItem>
-                          <SelectItem value="5">5 - Excellent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="comment">Comments (optional)</Label>
-                      <Textarea
-                        id="comment"
-                        placeholder="Share your thoughts about this event..."
-                        value={feedbackComment}
-                        onChange={(e) => setFeedbackComment(e.target.value)}
-                        className="glass"
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleFeedbackSubmit} 
-                      disabled={!feedbackRating}
-                      className="w-full btn-hero"
-                    >
-                      Submit Feedback
+              hasFeedbackSubmitted ? (
+                <Button variant="outline" size="icon" className="h-9 w-9 glass cursor-not-allowed opacity-60" disabled>
+                  <MessageSquare className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-9 w-9 glass hover:glass-strong">
+                      <Star className="w-4 h-4" />
                     </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent className="glass border border-white/20">
+                    <DialogHeader>
+                      <DialogTitle>Rate This Event</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="rating">Rating (1-5)</Label>
+                        <Select value={feedbackRating} onValueChange={setFeedbackRating}>
+                          <SelectTrigger className="glass">
+                            <SelectValue placeholder="Select rating" />
+                          </SelectTrigger>
+                          <SelectContent className="glass border border-white/20">
+                            <SelectItem value="1">1 - Poor</SelectItem>
+                            <SelectItem value="2">2 - Fair</SelectItem>
+                            <SelectItem value="3">3 - Good</SelectItem>
+                            <SelectItem value="4">4 - Very Good</SelectItem>
+                            <SelectItem value="5">5 - Excellent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="comment">Comments (optional)</Label>
+                        <Textarea
+                          id="comment"
+                          placeholder="Share your thoughts about this event..."
+                          value={feedbackComment}
+                          onChange={(e) => setFeedbackComment(e.target.value)}
+                          className="glass"
+                        />
+                      </div>
+                      <Button 
+                        onClick={handleFeedbackSubmit} 
+                        disabled={!feedbackRating}
+                        className="w-full btn-hero"
+                      >
+                        Submit Feedback
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )
             )}
           </div>
         </div>
@@ -309,70 +316,77 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
           </Button>
           
           {event.status === 'completed' && onFeedback && (
-            <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="glass hover:glass-strong px-4">
-                  <Star className="w-4 h-4 mr-2" />
-                  Feedback
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="glass border border-white/20">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center space-x-2">
-                    <Star className="w-5 h-5 text-accent" />
-                    <span>Rate This Event</span>
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="rating" className="text-base font-medium">Rating</Label>
-                    <Select value={feedbackRating} onValueChange={setFeedbackRating}>
-                      <SelectTrigger className="glass h-12">
-                        <SelectValue placeholder="How would you rate this event?" />
-                      </SelectTrigger>
-                      <SelectContent className="glass border border-white/20">
-                        <SelectItem value="1">⭐ 1 - Poor</SelectItem>
-                        <SelectItem value="2">⭐⭐ 2 - Fair</SelectItem>
-                        <SelectItem value="3">⭐⭐⭐ 3 - Good</SelectItem>
-                        <SelectItem value="4">⭐⭐⭐⭐ 4 - Very Good</SelectItem>
-                        <SelectItem value="5">⭐⭐⭐⭐⭐ 5 - Excellent</SelectItem>
-                      </SelectContent>
-                    </Select>
+            hasFeedbackSubmitted ? (
+              <Button variant="outline" className="glass cursor-not-allowed opacity-60 px-4" disabled>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Feedback Submitted
+              </Button>
+            ) : (
+              <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="glass hover:glass-strong px-4">
+                    <Star className="w-4 h-4 mr-2" />
+                    Feedback
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="glass border border-white/20">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center space-x-2">
+                      <Star className="w-5 h-5 text-accent" />
+                      <span>Rate This Event</span>
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="rating" className="text-base font-medium">Rating</Label>
+                      <Select value={feedbackRating} onValueChange={setFeedbackRating}>
+                        <SelectTrigger className="glass h-12">
+                          <SelectValue placeholder="How would you rate this event?" />
+                        </SelectTrigger>
+                        <SelectContent className="glass border border-white/20">
+                          <SelectItem value="1">⭐ 1 - Poor</SelectItem>
+                          <SelectItem value="2">⭐⭐ 2 - Fair</SelectItem>
+                          <SelectItem value="3">⭐⭐⭐ 3 - Good</SelectItem>
+                          <SelectItem value="4">⭐⭐⭐⭐ 4 - Very Good</SelectItem>
+                          <SelectItem value="5">⭐⭐⭐⭐⭐ 5 - Excellent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="comment" className="text-base font-medium">Comments (optional)</Label>
+                      <Textarea
+                        id="comment"
+                        placeholder="Share your thoughts about this event..."
+                        value={feedbackComment}
+                        onChange={(e) => setFeedbackComment(e.target.value)}
+                        className="glass h-24 resize-none"
+                        maxLength={1000}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {feedbackComment.length}/1000 characters
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setFeedbackOpen(false)}
+                        className="flex-1 glass hover:glass-strong"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleFeedbackSubmit} 
+                        disabled={!feedbackRating}
+                        className="flex-1 btn-hero"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Submit Feedback
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="comment" className="text-base font-medium">Comments (optional)</Label>
-                    <Textarea
-                      id="comment"
-                      placeholder="Share your thoughts about this event..."
-                      value={feedbackComment}
-                      onChange={(e) => setFeedbackComment(e.target.value)}
-                      className="glass h-24 resize-none"
-                      maxLength={1000}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {feedbackComment.length}/1000 characters
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setFeedbackOpen(false)}
-                      className="flex-1 glass hover:glass-strong"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handleFeedbackSubmit} 
-                      disabled={!feedbackRating}
-                      className="flex-1 btn-hero"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Submit Feedback
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )
           )}
         </div>
       </div>
