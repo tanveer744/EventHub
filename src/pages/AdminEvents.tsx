@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Eye, Plus } from 'lucide-react';
+import { Calendar, MapPin, Eye, Plus, BarChart3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Event {
@@ -85,12 +85,20 @@ const AdminEvents: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Admin - Event Management</h1>
-          <Link to="/create-event">
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Event
-            </Button>
-          </Link>
+          <div className="flex gap-3">
+            <Link to="/admin/reports">
+              <Button variant="outline" className="text-purple-600 border-purple-300 hover:bg-purple-50">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                View Reports
+              </Button>
+            </Link>
+            <Link to="/create-event">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Event
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Events Grid */}

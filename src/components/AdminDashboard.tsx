@@ -164,6 +164,15 @@ export function AdminDashboard() {
           <Button 
             variant="outline"
             className="glass hover:glass-strong"
+            onClick={() => navigate('/admin/reports')}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            View Reports
+          </Button>
+          
+          <Button 
+            variant="outline"
+            className="glass hover:glass-strong"
             onClick={() => navigate('/admin/events')}
           >
             <Eye className="w-4 h-4 mr-2" />

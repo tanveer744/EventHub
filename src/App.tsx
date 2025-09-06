@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import CreateEvent from "./pages/CreateEvent";
 import AdminEvents from "./pages/AdminEvents";
+import AdminReports from "./pages/AdminReports";
 import EventDetail from "./pages/EventDetail";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/admin/events" element={<AdminEvents />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/event/:id" element={<EventDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
