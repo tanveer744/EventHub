@@ -220,205 +220,63 @@ export function AdminDashboard() {
         )}
       </div>
 
-      {/* Reports Dashboard Section */}
+      {/* Quick Actions Section */}
       <div className="space-y-6">
         {/* Section Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">📊 Reports Dashboard</h2>
-            <p className="text-muted-foreground mt-1">Comprehensive analytics and insights for your events</p>
+            <h2 className="text-2xl font-bold text-foreground">🚀 Quick Actions</h2>
+            <p className="text-muted-foreground mt-1">Navigate to key administrative functions</p>
           </div>
-          <Button 
-            variant="outline"
-            className="glass hover:glass-strong"
-            onClick={() => navigate('/admin/reports')}
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            View All Reports
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
         </div>
 
-        {/* Quick Reports Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Event Popularity Report */}
-          <div className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group">
+        {/* Navigation Boxes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Report Viewing Box */}
+          <div 
+            className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group"
+            onClick={() => navigate('/admin/reports')}
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-academic-blue/20 to-wisdom-purple/20 group-hover:scale-110 transition-transform">
                 <BarChart3 className="w-6 h-6 text-academic-blue" />
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{stats?.totalEvents || 0}</div>
-                <div className="text-xs text-muted-foreground">Events Analyzed</div>
+                <ArrowRight className="w-5 h-5 text-accent group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Event Popularity</h3>
-            <p className="text-sm text-muted-foreground mb-4">Track which events are most popular among students</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Report Viewing</h3>
+            <p className="text-sm text-muted-foreground mb-4">Access comprehensive analytics, attendance reports, and student feedback insights</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 rounded-full bg-academic-blue animate-pulse"></div>
-                <span className="text-xs text-muted-foreground">Live Data</span>
+                <span className="text-xs text-muted-foreground">Analytics</span>
               </div>
-              <div className="text-xs text-accent font-medium">View Report →</div>
+              <div className="text-xs text-accent font-medium">View Reports →</div>
             </div>
           </div>
 
-          {/* Attendance Analytics */}
-          <div className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group">
+          {/* Manage Events Box */}
+          <div 
+            className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group"
+            onClick={() => navigate('/admin/events')}
+          >
             <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-growth-green/20 to-electric-magenta/20 group-hover:scale-110 transition-transform">
-                <Target className="w-6 h-6 text-growth-green" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-growth-green/20 to-electric-lime/20 group-hover:scale-110 transition-transform">
+                <Settings className="w-6 h-6 text-growth-green" />
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{stats?.avgAttendance || 0}%</div>
-                <div className="text-xs text-muted-foreground">Avg Attendance</div>
+                <ArrowRight className="w-5 h-5 text-accent group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Attendance Analytics</h3>
-            <p className="text-sm text-muted-foreground mb-4">Monitor attendance rates and patterns across events</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Manage Events</h3>
+            <p className="text-sm text-muted-foreground mb-4">Create, edit, and oversee all events including schedules and registrations</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 rounded-full bg-growth-green animate-pulse"></div>
-                <span className="text-xs text-muted-foreground">Real-time</span>
+                <span className="text-xs text-muted-foreground">Management</span>
               </div>
-              <div className="text-xs text-accent font-medium">View Analytics →</div>
-            </div>
-          </div>
-
-          {/* Student Feedback */}
-          <div className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-electric-orange/20 to-wisdom-purple/20 group-hover:scale-110 transition-transform">
-                <Star className="w-6 h-6 text-electric-orange" />
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{stats?.avgSatisfaction || 0}%</div>
-                <div className="text-xs text-muted-foreground">Satisfaction</div>
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Student Feedback</h3>
-            <p className="text-sm text-muted-foreground mb-4">Analyze student feedback and satisfaction ratings</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-electric-orange animate-pulse"></div>
-                <span className="text-xs text-muted-foreground">Updated</span>
-              </div>
-              <div className="text-xs text-accent font-medium">View Feedback →</div>
-            </div>
-          </div>
-
-          {/* Participation Insights */}
-          <div className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-electric-magenta/20 to-academic-blue/20 group-hover:scale-110 transition-transform">
-                <Users className="w-6 h-6 text-electric-magenta" />
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{stats?.activeRegistrations || 0}</div>
-                <div className="text-xs text-muted-foreground">Total Registrations</div>
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Participation Insights</h3>
-            <p className="text-sm text-muted-foreground mb-4">Student engagement and participation patterns</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-electric-magenta animate-pulse"></div>
-                <span className="text-xs text-muted-foreground">Active</span>
-              </div>
-              <div className="text-xs text-accent font-medium">View Insights →</div>
-            </div>
-          </div>
-
-          {/* Event Categories Overview */}
-          <div className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300 cursor-pointer group">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-wisdom-purple/20 to-growth-green/20 group-hover:scale-110 transition-transform">
-                <PieChart className="w-6 h-6 text-wisdom-purple" />
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{eventCategories.length || 0}</div>
-                <div className="text-xs text-muted-foreground">Categories</div>
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Event Categories</h3>
-            <p className="text-sm text-muted-foreground mb-4">Distribution and performance by event type</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-wisdom-purple animate-pulse"></div>
-                <span className="text-xs text-muted-foreground">Dynamic</span>
-              </div>
-              <div className="text-xs text-accent font-medium">View Breakdown →</div>
-            </div>
-          </div>
-
-          {/* Quick Actions Card */}
-          <div className="glass rounded-2xl p-6 bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20">
-            <div className="flex items-center justify-center mb-4">
-              <div className="p-4 rounded-full bg-gradient-to-br from-accent/20 to-accent/30">
-                <Clock className="w-8 h-8 text-accent" />
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground text-center mb-2">Quick Reports</h3>
-            <p className="text-sm text-muted-foreground text-center mb-6">Generate instant reports for any timeframe</p>
-            
-            <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full glass hover:glass-strong text-xs"
-                onClick={() => navigate('/admin/reports')}
-              >
-                <FileText className="w-3 h-3 mr-2" />
-                Last 7 Days Report
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full glass hover:glass-strong text-xs"
-                onClick={() => navigate('/admin/reports')}
-              >
-                <Download className="w-3 h-3 mr-2" />
-                Export All Data
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full glass hover:glass-strong text-xs"
-                onClick={() => navigate('/admin/reports')}
-              >
-                <TrendingUp className="w-3 h-3 mr-2" />
-                Trend Analysis
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats Bar */}
-        <div className="glass rounded-2xl p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-academic-blue mb-1">
-                {registrationTrends.reduce((sum, trend) => sum + trend.registrations, 0) || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">Total Registrations</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-growth-green mb-1">
-                {eventCategories.length > 0 ? eventCategories[0]?.category || 'N/A' : 'N/A'}
-              </div>
-              <div className="text-sm text-muted-foreground">Top Category</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-electric-orange mb-1">
-                {stats?.avgAttendance || 0}%
-              </div>
-              <div className="text-sm text-muted-foreground">Avg Attendance</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-wisdom-purple mb-1">
-                {Math.round((stats?.avgSatisfaction || 0) / 20 * 10) / 10}/5.0
-              </div>
-              <div className="text-sm text-muted-foreground">Avg Rating</div>
+              <div className="text-xs text-accent font-medium">Manage Events →</div>
             </div>
           </div>
         </div>

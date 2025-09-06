@@ -41,10 +41,22 @@ interface StudentParticipation {
   events_attended: number;
 }
 
+interface DashboardStats {
+  totalEvents: number;
+  eventsTrend: number;
+  activeRegistrations: number;
+  registrationsTrend: number;
+  avgAttendance: number;
+  attendanceTrend: number;
+  avgSatisfaction: number;
+  satisfactionTrend: number;
+}
+
 const AdminReports: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedFeedbackEventId, setSelectedFeedbackEventId] = useState<string>('');
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   
   // Report data states
   const [eventPopularity, setEventPopularity] = useState<EventPopularity[]>([]);
@@ -59,6 +71,7 @@ const AdminReports: React.FC = () => {
     attendance: false,
     feedback: false,
     participation: false,
+    stats: false,
   });
 
   const fetchEvents = React.useCallback(async () => {
@@ -167,11 +180,32 @@ const AdminReports: React.FC = () => {
     }
   }, []);
 
+  const fetchDashboardStats = React.useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, stats: true }));
+      const response = await fetch('/api/dashboard/stats?collegeId=1');
+      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+      
+      const data = await response.json();
+      setDashboardStats(data);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch dashboard statistics",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, stats: false }));
+    }
+  }, []);
+
   useEffect(() => {
     fetchEvents();
     fetchEventPopularity();
     fetchStudentParticipation();
-  }, [fetchEvents, fetchEventPopularity, fetchStudentParticipation]);
+    fetchDashboardStats();
+  }, [fetchEvents, fetchEventPopularity, fetchStudentParticipation, fetchDashboardStats]);
 
   useEffect(() => {
     if (selectedEventId) {
@@ -217,7 +251,7 @@ const AdminReports: React.FC = () => {
             <CardContent className="p-6 text-center">
               <Users className="w-8 h-8 text-green-300 mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">
-                {eventPopularity.reduce((sum, event) => sum + event.registrations, 0)}
+                {dashboardStats?.activeRegistrations || 0}
               </p>
               <p className="text-green-200 text-sm">Total Registrations</p>
             </CardContent>
