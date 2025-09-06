@@ -16,6 +16,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const adminStats = [
   {
@@ -134,6 +135,8 @@ const recentActivity = [
 ];
 
 export function AdminDashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-8 pb-20 lg:pb-8">
       {/* Dashboard Header */}
@@ -158,7 +161,19 @@ export function AdminDashboard() {
             <RefreshCw className="w-4 h-4" />
           </Button>
           
-          <Button className="btn-hero">
+          <Button 
+            variant="outline"
+            className="glass hover:glass-strong"
+            onClick={() => navigate('/admin/events')}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Manage Events
+          </Button>
+          
+          <Button 
+            className="btn-hero"
+            onClick={() => navigate('/create-event')}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create Event
           </Button>

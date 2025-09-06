@@ -1,0 +1,372 @@
+Great—let’s lock this down and finish exactly what the assignment asks for (no extra bells & whistles). I’ve read both your Campus Drive assignment and the JD and translated them into a tight, step-by-step plan using your preferred stack (React + TypeScript + Tailwind, Node.js/Express, PostgreSQL). I’ll also spell out the minimal pages, schema, APIs, workflows, and deliverables so you can execute quickly.
+
+---
+
+# What the assignment **requires** (scope you must cover)
+
+* **Design + docs:** assumptions, data to track, DB schema (ER/table sketch), API design, workflows, edge cases; plus show where you followed/deviated from AI suggestions and attach AI chat screenshots/logs.&#x20;
+* **Prototype (backend-first):**
+
+  1. Register students to an event
+  2. Mark attendance
+  3. Collect feedback (rating 1–5)
+  4. Provide queries/endpoints for reports: total registrations per event, attendance percentage, average feedback score.&#x20;
+* **Reports to show:**
+
+  * Event Popularity Report (sorted by registrations)
+  * Student Participation Report (events attended per student).&#x20;
+* **Deliverables:** AI log, design document, prototype code + README (README must be personally written by you, not AI), and report outputs/screenshots. Submit by **Sun, 7 Sep 2025, before 3:00 PM IST** via their Google Form.&#x20;
+
+The JD emphasizes clean backend work, REST APIs, DB interactions, documentation, and collaboration—so a crisp API + schema with simple, working endpoints fits perfectly.&#x20;
+
+---
+
+# Tech stack (matches your preference)
+
+* **Frontend:** React 18 + TypeScript + Vite, Tailwind CSS, React Router, fetch/axios (either is fine).
+* **Backend:** Node.js 18+, Express, TypeScript, `pg` (write straightforward SQL), `dotenv`.
+* **DB:** **PostgreSQL** (you can dev on SQLite if needed, but final screenshots on Postgres to match your preference + assignment options).&#x20;
+* **Dev tooling:** ESLint + Prettier, Nodemon/ts-node-dev.
+* **(Optional only for docs)** Mermaid in the design doc for quick ER/sequence diagrams.
+
+> Avoid extras (auth, QR, role systems, pagination, filters, email, etc.). The assignment doesn’t ask for them.
+
+---
+
+# Minimal product (just enough UI)
+
+The assignment doesn’t require a full UI, but they *do* want reports/outputs and it’s okay to have simple mockups/wireframes; we’ll keep a **tiny** UI so you can click through and screenshot results.&#x20;
+
+**Total pages: 3**
+
+1. **Admin – Events** (Web)
+
+   * Create Event (form)
+   * Event List (table with a “View” action)
+
+2. **Admin – Event Detail**
+
+   * Registered students table (checkbox to **Mark Attendance**)
+   * Feedback capture (rating 1–5) per student (simple select)
+
+3. **Reports**
+
+   * Event Popularity (sorted by registrations)
+   * Student Participation (attendance count per student)
+   * Attendance % per event
+   * Average feedback per event
+
+> “Student App (Mobile)” in the scenario is satisfied by making the registration/feedback parts responsive. No separate mobile build needed for this prototype.&#x20;
+
+---
+
+# Data to track (from assignment)
+
+* Event creation, student registration, attendance, feedback.&#x20;
+
+---
+
+# Database schema (Postgres)
+
+**Tables**
+
+```sql
+-- Colleges (to respect scale assumption; single DB, multi-tenant by college_id)
+CREATE TABLE colleges (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE students (
+  id SERIAL PRIMARY KEY,
+  college_id INT NOT NULL REFERENCES colleges(id),
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  UNIQUE (college_id, email)
+);
+
+CREATE TABLE events (
+  id SERIAL PRIMARY KEY,
+  college_id INT NOT NULL REFERENCES colleges(id),
+  title TEXT NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('Hackathon','Workshop','TechTalk','Fest','Seminar')),
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at   TIMESTAMPTZ NOT NULL,
+  location TEXT NOT NULL
+  -- no "status" or "capacity" logic added since it's outside scope
+);
+
+CREATE TABLE registrations (
+  id SERIAL PRIMARY KEY,
+  event_id INT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  student_id INT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (event_id, student_id) -- prevents duplicate registrations (edge case)
+);
+
+CREATE TABLE attendance (
+  id SERIAL PRIMARY KEY,
+  registration_id INT NOT NULL UNIQUE REFERENCES registrations(id) ON DELETE CASCADE,
+  present BOOLEAN NOT NULL,
+  marked_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE feedback (
+  id SERIAL PRIMARY KEY,
+  event_id INT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  student_id INT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  given_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (event_id, student_id) -- 1 feedback per student per event
+);
+```
+
+**Scale & tenancy decisions (as requested in assignment):** single database, **foreign-key scoped by `college_id`**; `events` don’t need globally unique IDs—primary key is per row; if you want human-friendly codes later, ensure **unique (`college_id`, `title`, `starts_at`)** or a generated `event_code` with **unique (`college_id`, `event_code`)**. No cross-college mixing in queries unless explicitly asked.&#x20;
+
+---
+
+# API design (minimal, REST)
+
+**Base URL:** `/api`
+
+**Colleges/seed (for testing)**
+
+* `POST /colleges` → create college (seed)
+* `POST /students` → { collegeId, fullName, email }
+
+**Events**
+
+* `POST /events` → { collegeId, title, eventType, startsAt, endsAt, location }
+* `GET /events?collegeId=...` → list
+
+**Registrations**
+
+* `POST /registrations` → { eventId, studentId }
+
+  * Fails on duplicate (via unique constraint).
+
+**Attendance**
+
+* `POST /attendance/mark` → { registrationId, present: true|false }
+
+**Feedback**
+
+* `POST /feedback` → { eventId, studentId, rating, comment? }
+
+**Reports**
+
+* `GET /reports/event-popularity?collegeId=...`
+* `GET /reports/attendance?eventId=...`
+* `GET /reports/avg-feedback?eventId=...`
+* `GET /reports/student-participation?collegeId=...`
+
+> These cover exactly what the assignment asks: registrations, attendance, feedback + required reports.&#x20;
+
+---
+
+# Report SQL (use in endpoints)
+
+**1) Event Popularity (sorted by registrations)**
+
+```sql
+SELECT e.id AS event_id, e.title,
+       COUNT(r.id) AS registrations
+FROM events e
+LEFT JOIN registrations r ON r.event_id = e.id
+WHERE e.college_id = $1
+GROUP BY e.id
+ORDER BY registrations DESC, e.id ASC;
+```
+
+(Use for **/reports/event-popularity**)
+
+**2) Attendance % for an event**
+
+```sql
+SELECT e.id AS event_id, e.title,
+  CASE WHEN COUNT(r.id)=0 THEN 0
+       ELSE ROUND(100.0 * SUM(CASE WHEN a.present THEN 1 ELSE 0 END) / COUNT(r.id), 2)
+  END AS attendance_percent
+FROM events e
+LEFT JOIN registrations r ON r.event_id = e.id
+LEFT JOIN attendance a ON a.registration_id = r.id
+WHERE e.id = $1
+GROUP BY e.id;
+```
+
+(Use for **/reports/attendance?eventId=**)
+
+**3) Average feedback score for an event**
+
+```sql
+SELECT e.id AS event_id, e.title,
+       ROUND(AVG(f.rating)::numeric, 2) AS avg_rating,
+       COUNT(f.id) AS feedback_count
+FROM events e
+LEFT JOIN feedback f ON f.event_id = e.id
+WHERE e.id = $1
+GROUP BY e.id;
+```
+
+(Use for **/reports/avg-feedback?eventId=**)
+
+**4) Student Participation Report (events attended)**
+
+```sql
+SELECT s.id AS student_id, s.full_name, s.email,
+       COALESCE(SUM(CASE WHEN a.present THEN 1 ELSE 0 END), 0) AS events_attended
+FROM students s
+JOIN registrations r ON r.student_id = s.id
+LEFT JOIN attendance a ON a.registration_id = r.id
+WHERE s.college_id = $1
+GROUP BY s.id
+ORDER BY events_attended DESC, s.id ASC;
+```
+
+(Use for **/reports/student-participation?collegeId=**)
+
+> The “Top 3 Most Active Students” and “filter by event type” are explicitly listed as **bonus**—skip to stay within scope.&#x20;
+
+---
+
+# Workflows (as required in the design doc)
+
+* **Registration → Attendance → Reporting**
+
+  1. Admin creates event (college-scoped).
+  2. Student record exists (seed a few).
+  3. Registration: create `(eventId, studentId)`; unique constraint blocks duplicates (edge case).
+  4. On event day, admin marks attendance per registration (present/absent).
+  5. After event, students (or admin for demo) submit 1–5 rating.
+  6. Reports read-only endpoints aggregate: popularity, attendance %, avg feedback, participation.&#x20;
+
+**Assumptions & edge cases (they asked you to document):**
+
+* Duplicate registrations → prevented by unique constraint.
+* Missing feedback → allowed; avg uses available rows only.
+* Cancelled events → out of scope (no status/change flows).
+* Cross-college data isolation → enforced by queries using `college_id`.&#x20;
+
+---
+
+# Minimal UI wireframes (3 pages)
+
+1. **Admin – Events**
+
+   * Form: Title, Type (select), StartsAt, EndsAt, Location, College (select or prefilled)
+   * Table: ID, Title, Starts, Ends, Type, \[View]
+
+2. **Admin – Event Detail**
+
+   * “Registrations” table: Student, Email, Present checkbox → Save → calls `/attendance/mark`
+   * “Feedback” row per student: Rating (1–5) → Save → `/feedback`
+
+3. **Reports**
+
+   * **Event Popularity**: table → Event, Registrations
+   * **Attendance %**: select Event → shows %
+   * **Avg Feedback**: select Event → shows mean
+   * **Student Participation**: table → Student, Events Attended
+
+> Keep it mobile-friendly, but do not add auth, search, filters, pagination, or QR. The assignment only asks for simple UI mockups/wireframes *optionally*; a tiny working UI helps you capture screenshots for deliverables.&#x20;
+
+---
+
+# Project structure (simple, two folders)
+
+```
+campus-event-reporting/
+├─ server/                # Express + TS + Postgres
+│  ├─ src/
+│  │  ├─ db.ts           # pg pool
+│  │  ├─ routes/         # events.ts, registrations.ts, attendance.ts, feedback.ts, reports.ts
+│  │  ├─ index.ts        # app, routes mount
+│  │  └─ sql/            # schema.sql, seed.sql
+│  ├─ package.json, tsconfig.json
+│  └─ README.md          # setup/run (write yourself)
+├─ client/                # React + TS + Vite + Tailwind
+│  ├─ src/pages/         # AdminEvents.tsx, EventDetail.tsx, Reports.tsx
+│  ├─ src/lib/api.ts     # fetch wrappers
+│  ├─ index.html, main.tsx, App.tsx, tailwind.css
+│  └─ package.json, tsconfig.json
+└─ docs/
+   ├─ design-doc.md      # (include ER + workflows + assumptions)
+   └─ ai-log/            # screenshots of this chat + any LLM you used
+```
+
+---
+
+# Step-by-step execution plan (today → submission)
+
+**1) Repo & DB (60–90 min)**
+
+* Init repo; add `server/` (Express + TS) and `client/` (Vite + TS + Tailwind).
+* Write `schema.sql` above; run migrations; add `seed.sql` for 1 college, 5 students, 2–3 events.
+
+**2) Backend endpoints (2–3 hrs)**
+
+* Implement `/events`, `/students`, `/registrations`, `/attendance/mark`, `/feedback`.
+* Implement `/reports/*` using the SQL provided.
+* Test quickly with cURL/Postman and keep responses super simple (JSON arrays/objects).
+
+**3) Minimal UI (2 hrs)**
+
+* Page 1 (Admin – Events): form + table, link to detail.
+* Page 2 (Event Detail): registrations table with Present checkbox; feedback rating dropdown.
+* Page 3 (Reports): 4 small sections calling the report endpoints and rendering tables/numbers.
+
+**4) Documentation & deliverables (90 min)**
+
+* **Design doc:** include: data to track, schema (paste ER/table), endpoints, sequence of flows, assumptions & edge cases, and briefly where you followed/deviated from AI suggestions.&#x20;
+* **AI log:** take screenshots (this chat + any others) and put in `docs/ai-log/`.&#x20;
+* **README (hand-written):** explain how *you* understand the problem, setup steps, how to run server/client, and how to hit report endpoints. Explicitly avoid AI phrasing since they warned about disqualification.&#x20;
+* **Reports/outputs:** capture screenshots of your Reports page and/or Postman results.&#x20;
+
+**5) Final check vs JD (15 min)**
+
+* Clean code, small functions, clear SQL, inline comments—this mirrors the JD’s emphasis on REST APIs, DB work, and documentation.&#x20;
+
+---
+
+# Example request/response shapes (keep responses tiny)
+
+* **POST /registrations**
+  Req `{ "eventId": 12, "studentId": 34 }`
+  Res `{ "id": 99, "eventId": 12, "studentId": 34, "registeredAt": "..." }`
+
+* **POST /attendance/mark**
+  Req `{ "registrationId": 99, "present": true }`
+  Res `{ "registrationId": 99, "present": true }`
+
+* **POST /feedback**
+  Req `{ "eventId": 12, "studentId": 34, "rating": 4, "comment": "Good" }`
+  Res `{ "id": 10, "eventId": 12, "studentId": 34, "rating": 4 }`
+
+* **GET /reports/event-popularity?collegeId=1**
+  Res `[ { "eventId": 12, "title": "Workshop", "registrations": 23 }, ... ]`
+
+---
+
+# What to include in your **design document** (checklist)
+
+* **Assumptions & decisions** (multi-tenant via `college_id`, no auth, 1 feedback per student/event, duplicates blocked, missing feedback allowed).&#x20;
+* **Data to track** (events, registrations, attendance, feedback).&#x20;
+* **ER/table sketch** (tables above).
+* **API design** (endpoints above).&#x20;
+* **Workflows** (registration → attendance → reporting).&#x20;
+* **Edge cases** (duplicate registration, absent feedback).&#x20;
+
+---
+
+# Submission checklist (from assignment)
+
+* [ ] `docs/ai-log/` with AI conversation screenshots.&#x20;
+* [ ] `docs/design-doc.md` with schema, APIs, flows, assumptions.&#x20;
+* [ ] `server/` + `client/` prototypes + **README you wrote yourself**.&#x20;
+* [ ] Reports outputs (screenshots or query results).
+* [ ] Submit via the official Google Form before **3:00 PM IST on Sun, 7 Sep 2025**.&#x20;
+
+---
+
+If you want, I can generate the starting repo structure (server routes, SQL schema, and the three minimal React pages) so you can fill in the README yourself and ship—say the word and I’ll drop the scaffold here.
