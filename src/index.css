@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Digital Academic Luxury Design System - Campus Event Management Platform */
+
+@layer base {
+  :root {
+    /* Core Brand Identity - Digital Gold & Navy */
+    --brand-gold: 43 85% 53%;
+    --brand-navy: 210 81% 10%;
+    --brand-copper: 39 52% 62%;
+    --brand-champagne: 40 64% 90%;
+    
+    /* Electric Accent Palette */
+    --electric-orange: 16 100% 60%;
+    --electric-cyan: 193 100% 50%;
+    --electric-magenta: 344 100% 55%;
+    --electric-lime: 120 61% 50%;
+    --electric-sunset: 341 100% 70%;
+    
+    /* Glassmorphism Foundation */
+    --glass-bg-light: 0 0% 100% / 0.1;
+    --glass-bg-dark: 220 39% 11% / 0.2;
+    --glass-border: 0 0% 100% / 0.2;
+    --glass-shadow: 219 27% 25% / 0.37;
+    
+    /* Educational Psychology Colors */
+    --academic-blue: 217 91% 60%;
+    --focus-indigo: 238 74% 65%;
+    --wisdom-purple: 258 90% 66%;
+    --growth-green: 158 64% 52%;
+    --energy-amber: 43 96% 56%;
+    --alert-red: 0 84% 60%;
+    
+    /* Semantic Design Tokens */
+    --background: 225 100% 98%;
+    --foreground: 220 71% 6%;
+    
+    --card: 0 0% 100% / 0.1;
+    --card-foreground: 220 71% 6%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 71% 6%;
+    
+    --primary: 210 81% 10%;
+    --primary-foreground: 0 0% 98%;
+    
+    --secondary: 43 85% 53%;
+    --secondary-foreground: 210 81% 10%;
+    
+    --muted: 225 25% 95%;
+    --muted-foreground: 220 13% 46%;
+    
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 98%;
+    
+    --warning: 43 96% 56%;
+    --warning-foreground: 220 71% 6%;
+    
+    --border: 220 25% 88%;
+    --input: 220 25% 88%;
+    --ring: 217 91% 60%;
+    
+    --hero-gradient: linear-gradient(135deg, hsl(var(--academic-blue)), hsl(var(--wisdom-purple)), hsl(var(--electric-magenta)));
+    --gold-gradient: linear-gradient(135deg, hsl(var(--brand-gold)), hsl(var(--brand-copper)));
+    --glass-gradient: linear-gradient(135deg, hsl(var(--glass-bg-light)), hsl(var(--glass-bg-dark)));
+    
+    --radius: 0.75rem;
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--brand-gold) / 0.4);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 220 71% 4%;
+    --foreground: 225 100% 98%;
+    
+    --card: 220 39% 11% / 0.2;
+    --card-foreground: 225 100% 98%;
+    
+    --popover: 220 39% 11%;
+    --popover-foreground: 225 100% 98%;
+    
+    --primary: 225 100% 98%;
+    --primary-foreground: 220 71% 6%;
+    
+    --secondary: 43 85% 53%;
+    --secondary-foreground: 220 71% 6%;
+    
+    --muted: 220 39% 15%;
+    --muted-foreground: 220 13% 65%;
+    
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 98%;
+    
+    --border: 220 39% 18%;
+    --input: 220 39% 18%;
+    --ring: 217 91% 60%;
+    
+    --glass-bg-light: 220 39% 11% / 0.1;
+    --glass-bg-dark: 220 71% 4% / 0.2;
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Glass Morphism Components */
+  .glass {
+    @apply backdrop-blur-xl bg-white/10 dark:bg-gray-900/10 border border-white/20 shadow-2xl;
+  }
+  
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/20 dark:bg-gray-900/30 border border-white/30;
+  }
+  
+  /* Premium Button Variants */
+  .btn-hero {
+    @apply px-8 py-4 bg-gradient-to-r from-academic-blue to-wisdom-purple text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden;
+  }
+  
+  .btn-gold {
+    @apply px-6 py-3 bg-gradient-to-r from-brand-gold to-brand-copper text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-102 transition-all duration-300;
+  }
+  
+  .btn-ghost-glass {
+    @apply px-6 py-3 glass text-white font-medium rounded-lg hover:bg-white/20 transition-all duration-300;
+  }
+  
+  /* Animated Elements */
+  .floating-element {
+    @apply animate-float;
+  }
+  
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent hover:before:translate-x-full before:transition-transform before:duration-1000;
+  }
+}
+
+@layer utilities {
+  /* Advanced Animations */
+  .animate-fade-in-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-delayed {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: -2s;
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulseGlow 2s infinite;
+  }
+  
+  .animate-draw-path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: drawPath 3s ease-in-out infinite;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  .hover-scale-sm {
+    @apply transition-transform duration-200 hover:scale-102;
+  }
+  
+  /* Animation Delays */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+  .animation-delay-700 { animation-delay: 700ms; }
+  
+  /* Gradient Text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-academic-blue to-wisdom-purple bg-clip-text text-transparent;
+  }
+  
+  .text-gold-gradient {
+    @apply bg-gradient-to-r from-brand-gold to-brand-copper bg-clip-text text-transparent;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(1deg); }
+  66% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--academic-blue) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--academic-blue) / 0.6);
+  }
+}
+
+@keyframes drawPath {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Responsive Design Helpers */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
