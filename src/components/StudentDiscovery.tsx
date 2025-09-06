@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { EventCard } from './EventCard';
-import { CategoryCard } from './CategoryCard';
 import { StatCard } from './StatCard';
 import { TrendingUp, Users, Calendar, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +13,15 @@ interface Event {
   ends_at: string;
   location: string;
   college_id: number;
+}
+
+interface Registration {
+  id: number;
+  event_id: number;
+  student_id: number;
+  full_name: string;
+  email: string;
+  registered_at: string;
 }
 
 interface FormattedEvent {
@@ -78,16 +86,42 @@ export function StudentDiscovery() {
   const [loading, setLoading] = useState(true);
   const [featuredEvents, setFeaturedEvents] = useState<FormattedEvent[]>([]);
   const [regularEvents, setRegularEvents] = useState<FormattedEvent[]>([]);
+  const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
+  const [registrationLoading, setRegistrationLoading] = useState<Set<string>>(new Set());
+
+  // Mock student ID - in a real app this would come from authentication
+  const CURRENT_STUDENT_ID = 1;
+
+  // Fetch user's registrations
+  const fetchUserRegistrations = async () => {
+    try {
+      const response = await fetch(`/api/registrations?studentId=${CURRENT_STUDENT_ID}`);
+      
+      if (response.ok) {
+        const userRegistrations: Registration[] = await response.json();
+        const userEventIds = userRegistrations.map((reg: Registration) => reg.event_id.toString());
+        
+        setRegisteredEventIds(new Set(userEventIds));
+      }
+    } catch (error) {
+      console.error('Error fetching user registrations:', error);
+    }
+  };
 
   // Fetch events from API
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/events?collegeId=1');
         
-        if (response.ok) {
-          const apiEvents: Event[] = await response.json();
+        // Fetch events and registrations in parallel
+        const [eventsResponse] = await Promise.all([
+          fetch('/api/events?collegeId=1'),
+          fetchUserRegistrations()
+        ]);
+        
+        if (eventsResponse.ok) {
+          const apiEvents: Event[] = await eventsResponse.json();
           const formattedEvents = apiEvents.map(formatEvent);
           
           setEvents(formattedEvents);
@@ -102,7 +136,7 @@ export function StudentDiscovery() {
           });
         }
       } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error fetching data:', error);
         toast({
           title: "Network Error",
           description: "Unable to connect to the server.",
@@ -113,13 +147,29 @@ export function StudentDiscovery() {
       }
     };
 
-    fetchEvents();
+    fetchData();
   }, [toast]);
 
   // Handle event registration
   const handleRegister = async (eventId: string) => {
+    // Check if already registered
+    if (registeredEventIds.has(eventId)) {
+      toast({
+        title: "Already Registered",
+        description: "You are already registered for this event.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Check if registration is in progress
+    if (registrationLoading.has(eventId)) {
+      return;
+    }
+
     try {
-      const studentId = 1; // Mock student ID for demo
+      // Add to loading set
+      setRegistrationLoading(prev => new Set(prev).add(eventId));
       
       const response = await fetch('/api/registrations', {
         method: 'POST',
@@ -128,11 +178,14 @@ export function StudentDiscovery() {
         },
         body: JSON.stringify({
           eventId: parseInt(eventId),
-          studentId: studentId,
+          studentId: CURRENT_STUDENT_ID,
         }),
       });
 
       if (response.ok) {
+        // Add to registered events
+        setRegisteredEventIds(prev => new Set(prev).add(eventId));
+        
         const event = events.find(e => e.id === eventId);
         toast({
           title: "Registration Successful!",
@@ -140,11 +193,22 @@ export function StudentDiscovery() {
         });
       } else {
         const errorData = await response.json();
-        toast({
-          title: "Registration Failed",
-          description: errorData.error || "Unable to register for this event.",
-          variant: "destructive",
-        });
+        
+        // Check if it's a duplicate registration error
+        if (errorData.error && errorData.error.includes('duplicate')) {
+          setRegisteredEventIds(prev => new Set(prev).add(eventId));
+          toast({
+            title: "Already Registered",
+            description: "You are already registered for this event.",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Registration Failed",
+            description: errorData.error || "Unable to register for this event.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error('Error registering for event:', error);
@@ -153,14 +217,19 @@ export function StudentDiscovery() {
         description: "Unable to process registration. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      // Remove from loading set
+      setRegistrationLoading(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(eventId);
+        return newSet;
+      });
     }
   };
 
   // Handle feedback submission
   const handleFeedback = async (eventId: string, rating: number, comment?: string) => {
     try {
-      const studentId = 1; // Mock student ID for demo
-      
       const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: {
@@ -168,7 +237,7 @@ export function StudentDiscovery() {
         },
         body: JSON.stringify({
           eventId: parseInt(eventId),
-          studentId: studentId,
+          studentId: CURRENT_STUDENT_ID,
           rating: rating,
           comment: comment || null,
         }),
@@ -262,6 +331,7 @@ export function StudentDiscovery() {
               >
                 <EventCard 
                   event={event} 
+                  isRegistered={registeredEventIds.has(event.id)}
                   onRegister={() => handleRegister(event.id)}
                   onFeedback={(rating, comment) => handleFeedback(event.id, rating, comment)}
                 />
@@ -270,25 +340,6 @@ export function StudentDiscovery() {
           </div>
         </section>
       )}
-
-      {/* Category Browser */}
-      <section>
-        <h2 className="text-2xl font-bold text-foreground mb-6">
-          📂 Browse by Category
-        </h2>
-        
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {categories.map((category, index) => (
-            <div
-              key={category.label}
-              className="animate-fade-in-up"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <CategoryCard {...category} />
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* All Events */}
       <section>
@@ -332,6 +383,7 @@ export function StudentDiscovery() {
             >
               <EventCard 
                 event={event} 
+                isRegistered={registeredEventIds.has(event.id)}
                 onRegister={() => handleRegister(event.id)}
                 onFeedback={(rating, comment) => handleFeedback(event.id, rating, comment)}
               />

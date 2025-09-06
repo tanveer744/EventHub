@@ -10,6 +10,7 @@ import registrationsRouter from './routes/registrations';
 import attendanceRouter from './routes/attendance';
 import feedbackRouter from './routes/feedback';
 import reportsRouter from './routes/reports';
+import dashboardRouter from './routes/dashboard';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use('/api/registrations', registrationsRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/feedback', feedbackRouter);
 app.use('/api/reports', reportsRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -26,11 +26,13 @@ interface EventCardProps {
   event: Event;
   variant?: 'default' | 'featured' | 'compact';
   className?: string;
+  isRegistered?: boolean;
+  isLoading?: boolean;
   onRegister?: () => void;
   onFeedback?: (rating: number, comment?: string) => void;
 }
 
-export function EventCard({ event, variant = 'default', className = '', onRegister, onFeedback }: EventCardProps) {
+export function EventCard({ event, variant = 'default', className = '', isRegistered = false, isLoading = false, onRegister, onFeedback }: EventCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState<string>('');
@@ -117,10 +119,27 @@ export function EventCard({ event, variant = 'default', className = '', onRegist
           
           <div className="flex gap-2">
             <Button 
-              className="flex-1 btn-hero h-9 text-sm"
-              onClick={onRegister}
+              className={`flex-1 h-9 text-sm transition-all ${
+                isRegistered 
+                  ? 'bg-green-600 text-white hover:bg-green-700 cursor-default' 
+                  : 'btn-hero'
+              }`}
+              onClick={isRegistered ? undefined : onRegister}
+              disabled={isRegistered || isLoading}
             >
-              Register Now
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Registering...
+                </>
+              ) : isRegistered ? (
+                <>
+                  <span className="mr-2">✓</span>
+                  Already Registered
+                </>
+              ) : (
+                'Register Now'
+              )}
             </Button>
             {event.status === 'completed' && onFeedback && (
               <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
@@ -266,12 +285,26 @@ export function EventCard({ event, variant = 'default', className = '', onRegist
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
-            className="flex-1 btn-hero shimmer"
-            onClick={onRegister}
+            className={`flex-1 transition-all ${
+              isRegistered 
+                ? 'bg-green-600 text-white hover:bg-green-700 cursor-default' 
+                : 'btn-hero shimmer'
+            }`}
+            onClick={isRegistered ? undefined : onRegister}
+            disabled={isRegistered}
           >
             <span className="relative z-10 flex items-center justify-center">
-              Register Now
-              <ExternalLink className="w-4 h-4 ml-2" />
+              {isRegistered ? (
+                <>
+                  <span className="mr-2">✓</span>
+                  Already Registered
+                </>
+              ) : (
+                <>
+                  Register Now
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </>
+              )}
             </span>
           </Button>
           

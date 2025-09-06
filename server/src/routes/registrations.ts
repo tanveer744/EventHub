@@ -3,25 +3,40 @@ import pool from '../db';
 
 const router = Router();
 
-// GET /registrations?eventId=1
+// GET /registrations?eventId=1 or /registrations?studentId=1
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { eventId } = req.query;
+    const { eventId, studentId } = req.query;
     
-    if (!eventId || typeof eventId !== 'string') {
-      return res.status(400).json({ error: 'eventId query parameter is required' });
+    if (eventId && typeof eventId === 'string') {
+      // Get registrations for a specific event
+      const query = `
+        SELECT r.*, s.full_name, s.email, r.registered_at
+        FROM registrations r
+        JOIN students s ON r.student_id = s.id
+        WHERE r.event_id = $1
+        ORDER BY r.registered_at DESC
+      `;
+      
+      const result = await pool.query(query, [parseInt(eventId, 10)]);
+      res.json(result.rows);
+    } else if (studentId && typeof studentId === 'string') {
+      // Get registrations for a specific student
+      const query = `
+        SELECT r.*, e.title, e.event_type, e.starts_at, e.ends_at, e.location
+        FROM registrations r
+        JOIN events e ON r.event_id = e.id
+        WHERE r.student_id = $1
+        ORDER BY r.registered_at DESC
+      `;
+      
+      const result = await pool.query(query, [parseInt(studentId, 10)]);
+      res.json(result.rows);
+    } else {
+      return res.status(400).json({ 
+        error: 'Either eventId or studentId query parameter is required' 
+      });
     }
-    
-    const query = `
-      SELECT r.*, s.full_name, s.email, r.registered_at
-      FROM registrations r
-      JOIN students s ON r.student_id = s.id
-      WHERE r.event_id = $1
-      ORDER BY r.registered_at DESC
-    `;
-    
-    const result = await pool.query(query, [parseInt(eventId, 10)]);
-    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching registrations:', error);
     res.status(500).json({ error: 'Failed to fetch registrations' });
