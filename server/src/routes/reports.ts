@@ -99,11 +99,12 @@ router.get('/student-participation', async (req: Request, res: Response) => {
       SELECT s.id AS student_id, s.full_name, s.email,
              COALESCE(SUM(CASE WHEN a.present THEN 1 ELSE 0 END), 0) AS events_attended
       FROM students s
-      JOIN registrations r ON r.student_id = s.id
+      LEFT JOIN registrations r ON r.student_id = s.id
       LEFT JOIN attendance a ON a.registration_id = r.id
       WHERE s.college_id = $1
       GROUP BY s.id
       ORDER BY events_attended DESC, s.id ASC
+      LIMIT 3
     `;
     
     const result = await pool.query(query, [collegeId]);
