@@ -1,0 +1,124 @@
+Reference: https://chatgpt.com/s/t_68bd29c9bf04819186d6e20988e3e6b3
+Your approach is excellent — clear, structured, and focused on exactly what’s required. The tech stack (Express + PostgreSQL + React) suggested by you is perfect, and my role here is only to shape it into a step-by-step execution plan.
+
+🔑 Step 1. Set up backend (Express + PostgreSQL)
+
+In your repo root, create a server/ folder (keep your current src/ for frontend).
+
+Inside server/:
+
+npm init -y
+npm install express pg dotenv cors
+npm install -D typescript ts-node-dev @types/node @types/express
+
+
+Add tsconfig.json.
+
+Create src/index.ts with a simple Express app (GET /health → {ok: true}).
+
+Add DB connection file src/db.ts using pg.Pool.
+
+Run Postgres locally (or Docker). Create DB campus_event_reporting.
+
+🔑 Step 2. Create DB schema
+
+Copy the SQL schema (events, students, registrations, attendance, feedback).
+
+Put it in server/src/sql/schema.sql.
+
+Run it once against your DB:
+
+psql -d campus_event_reporting -f schema.sql
+
+
+🔑 Step 3. Implement minimal REST endpoints
+
+Make small route files inside server/src/routes/:
+
+events.ts → POST /events, GET /events
+
+students.ts → POST /students
+
+registrations.ts → POST /registrations
+
+attendance.ts → POST /attendance/mark
+
+feedback.ts → POST /feedback
+
+reports.ts →
+
+/reports/event-popularity
+
+/reports/attendance
+
+/reports/avg-feedback
+
+/reports/student-participation
+
+Each route should:
+
+Validate input minimally (req.body fields exist).
+
+Run a prepared SQL query.
+
+Return JSON.
+
+⚠️ Don’t add auth, pagination, filtering, etc. Keep it strictly to assignment requirements.
+
+🔑 Step 4. Test backend first
+
+Use Postman or curl to:
+
+Create a college, students, and events.
+
+Register a student to an event.
+
+Mark attendance.
+
+Submit feedback.
+
+Call reports endpoints and check outputs.
+
+📸 Take screenshots of these outputs (for deliverables).
+
+🔑 Step 5. Wire frontend to backend
+
+Currently you have a static single-page UI. Evolve it into 3 minimal pages (using React Router):
+
+Events Page (list + create form)
+
+Fetch /events?collegeId=1
+
+Form → POST /events
+
+Event Detail Page (registrations, attendance, feedback)
+
+Fetch /registrations?eventId=...
+
+Add checkboxes → POST /attendance/mark
+
+Add rating select → POST /feedback
+
+Reports Page
+
+Fetch /reports/event-popularity?collegeId=1
+
+Fetch /reports/student-participation?collegeId=1
+
+Fetch /reports/attendance?eventId=...
+
+Fetch /reports/avg-feedback?eventId=...
+
+Render them in Tailwind tables
+
+🔑 Step 6. Documentation & deliverables
+
+AI log: save screenshots of this chat + Lovable AI session.
+
+Design doc: describe DB schema, APIs, workflows, assumptions.
+
+README (hand-written): explain how to run backend + frontend, DB setup, how to test reports.
+
+Report outputs: screenshots from Postman/your UI.
+
+Do you want me to now polish this into a final README.md file (with proper headings and formatting for direct submission), or keep it in this raw checklist form?
