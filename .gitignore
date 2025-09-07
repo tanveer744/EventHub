@@ -29,11 +29,7 @@ out/
 bun.lockb
 yarn.lock
 
-# Development files
-ai_logs/
-**/context.txt
-**/test-db.ts
-**/add-students.ts
+
 
 # IDE/Editor directories and files
 .vscode/*
