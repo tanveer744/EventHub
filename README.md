@@ -206,17 +206,7 @@ Working on this assignment taught me a lot about full-stack development:
 - Used Github Copilot for autocomplete while coding
 - But made all architectural decisions myself
 
-## 9. Challenges Faced
-
-### Database Design:
-The difficult part was designing the schema to handle the scale requirements. I had to decide whether to keep data separate per college or in one large dataset. I went with a unified approach using collegeId fields because it makes cross-college analytics possible.
-
-### Edge Cases:
-- Handling duplicate registrations (prevented at API level)
-- Managing feedback for cancelled events (disabled form)
-- Dealing with students who register but don't attend
-
-## 10. Future Improvements
+## 9. Future Improvements
 
 If I were to continue developing this system:
 
@@ -234,7 +224,7 @@ If I were to continue developing this system:
 - Implement proper logging and monitoring
 - Add API rate limiting and security headers
 
-## 11. Screenshots
+## 10. Screenshots
 
 I've included screenshots of the working application in the `/screenshots` folder. These show:
 - Admin dashboard with event creation
@@ -243,7 +233,7 @@ I've included screenshots of the working application in the `/screenshots` folde
 - Reports and analytics views
 - QR code generation and scanning
 
-## 12. Final Thoughts
+## 11. Final Thoughts
 
 This assignment was really challenging but I learned a lot about building full-stack applications. The requirements were clear and it forced me to think about real-world problems like scaling, data relationships, and user workflows.
 
@@ -259,10 +249,6 @@ This assignment was really challenging but I learned a lot about building full-s
 - AI conversation logs are in the `/ai_logs` folder as requested
 
 This project taught me that building something that actually works is way harder than just following tutorials. You have to think about edge cases, user experience, data consistency, and so many other things that don't come up in simple examples.
-
-## Repository
-
-GitHub repo: https://github.com/tanveer744/EventHub
 
 ---
 *Submitted for Webknot Technologies Campus Drive Assignment*  
