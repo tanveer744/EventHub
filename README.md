@@ -4,7 +4,7 @@
 
 This is my submission for the Webknot Technologies Campus Drive Assignment. The task was to build a Campus Event Management Platform with an admin portal for college staff and a student interface for event participation.
 
-I decided to build this as a web application instead of separate mobile/web apps because the assigment problem clearl states not to over complicate things and also my project outptut covers all the required functionalities. The system handles event creation, student registration, attendance tracking, and feedback collection - basically everything mentioned in the problem statement.
+I decided to build this as a single web application instead of separate mobile/web apps because the assigment problem clearly states not to over complicate things and also my project outptut covers all the required functionalities. The system handles event creation, student registration, attendance tracking, and feedback collection - basically everything mentioned in the problem statement.
 
 I used AI tools (mainly ChatGPT , Perpelxity, Copilot ) to help brainstorm the database design and API structure, but all the final decisions and code implementation are mine. You can check the ai_logs folder for my conversation screenshots.
 
@@ -78,7 +78,7 @@ I picked these technologies based on what I know and what seemed practical for t
  Open http://localhost:8080/ in your browser 
 
 ### Student Workflow:
-1. Switch betweeen list of Users.
+1. Switch between list of Users.
 2. Browse events on the homepage - you can see hackathons, workshops, fests, etc.
 3. Click on any event to see details (description, venue, timing)
 4. Hit "Register" to sign up for events
@@ -126,7 +126,7 @@ I picked these technologies based on what I know and what seemed practical for t
    - `id` (Primary Key, Serial)
    - `event_id` (Foreign Key → events.id, CASCADE DELETE)
    - `student_id` (Foreign Key → students.id, CASCADE DELETE)
-   - `registered_at` (Timestamptz, defaults to NOW())
+   - `registered_at` (Timestamp, defaults to NOW())
    - Unique constraint on (event_id, student_id) to prevent duplicate registrations
 
 5. **attendance**
