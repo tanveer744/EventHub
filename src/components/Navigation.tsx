@@ -38,7 +38,7 @@ export function Navigation({ activeView, onViewChange }: NavigationProps) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
-                🎉 Discover
+                🎉 Student
               </button>
               <button
                 onClick={() => onViewChange('admin')}
@@ -48,10 +48,10 @@ export function Navigation({ activeView, onViewChange }: NavigationProps) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
-                📊 Dashboard
+                📊 Admin
               </button>
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                📅 My Events
+                
               </a>
             </div>
           </div>

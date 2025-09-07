@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { EventCard } from './EventCard';
 import { StatCard } from './StatCard';
+import { StudentSelector } from './StudentSelector';
 import { TrendingUp, Users, Calendar, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,6 +23,13 @@ interface Registration {
   full_name: string;
   email: string;
   registered_at: string;
+}
+
+interface Student {
+  id: number;
+  full_name: string;
+  email: string;
+  college_id: number;
 }
 
 interface Feedback {
@@ -99,13 +107,45 @@ export function StudentDiscovery() {
   const [registrationLoading, setRegistrationLoading] = useState<Set<string>>(new Set());
   const [submittedFeedbackIds, setSubmittedFeedbackIds] = useState<Set<string>>(new Set());
 
-  // Mock student ID - in a real app this would come from authentication
-  const CURRENT_STUDENT_ID = 1;
+  // Student management state
+  const [students, setStudents] = useState<Student[]>([]);
+  const [currentStudentId, setCurrentStudentId] = useState<number | null>(null);
+  const [currentStudentName, setCurrentStudentName] = useState<string>('');
+  const [studentsLoading, setStudentsLoading] = useState(true);
+
+  // Fetch all students for the selector
+  const fetchStudents = useCallback(async () => {
+    try {
+      setStudentsLoading(true);
+      const response = await fetch('/api/students?collegeId=1');
+      if (response.ok) {
+        const studentsData = await response.json();
+        setStudents(studentsData);
+        
+        // Auto-select first student if none selected
+        if (studentsData.length > 0 && !currentStudentId) {
+          setCurrentStudentId(studentsData[0].id);
+          setCurrentStudentName(studentsData[0].full_name);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students",
+        variant: "destructive",
+      });
+    } finally {
+      setStudentsLoading(false);
+    }
+  }, [currentStudentId, toast]);
 
   // Fetch user's registrations
-  const fetchUserRegistrations = async () => {
+  const fetchUserRegistrations = useCallback(async () => {
+    if (!currentStudentId) return;
+    
     try {
-      const response = await fetch(`/api/registrations?studentId=${CURRENT_STUDENT_ID}`);
+      const response = await fetch(`/api/registrations?studentId=${currentStudentId}`);
       
       if (response.ok) {
         const userRegistrations: Registration[] = await response.json();
@@ -116,12 +156,14 @@ export function StudentDiscovery() {
     } catch (error) {
       console.error('Error fetching user registrations:', error);
     }
-  };
+  }, [currentStudentId]);
 
   // Fetch user's submitted feedback
-  const fetchUserFeedback = async () => {
+  const fetchUserFeedback = useCallback(async () => {
+    if (!currentStudentId) return;
+    
     try {
-      const response = await fetch(`/api/feedback?studentId=${CURRENT_STUDENT_ID}`);
+      const response = await fetch(`/api/feedback?studentId=${currentStudentId}`);
       
       if (response.ok) {
         const userFeedback: Feedback[] = await response.json();
@@ -132,7 +174,7 @@ export function StudentDiscovery() {
     } catch (error) {
       console.error('Error fetching user feedback:', error);
     }
-  };
+  }, [currentStudentId]);
 
   // Fetch events from API
   useEffect(() => {
@@ -177,6 +219,28 @@ export function StudentDiscovery() {
     fetchData();
   }, [toast]);
 
+  // Fetch students on component mount
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // Fetch user data when student changes
+  useEffect(() => {
+    if (currentStudentId) {
+      fetchUserRegistrations();
+      fetchUserFeedback();
+    }
+  }, [currentStudentId, fetchUserRegistrations, fetchUserFeedback]);
+
+  // Handle student selection change
+  const handleStudentChange = (studentId: number, studentName: string) => {
+    setCurrentStudentId(studentId);
+    setCurrentStudentName(studentName);
+    // Clear previous user data
+    setRegisteredEventIds(new Set());
+    setSubmittedFeedbackIds(new Set());
+  };
+
   // Handle event registration
   const handleRegister = async (eventId: string) => {
     // Check if already registered
@@ -205,7 +269,7 @@ export function StudentDiscovery() {
         },
         body: JSON.stringify({
           eventId: parseInt(eventId),
-          studentId: CURRENT_STUDENT_ID,
+          studentId: currentStudentId,
         }),
       });
 
@@ -256,6 +320,15 @@ export function StudentDiscovery() {
 
   // Handle feedback submission
   const handleFeedback = async (eventId: string, rating: number, comment?: string) => {
+    if (!currentStudentId) {
+      toast({
+        title: "Error",
+        description: "Please select a student first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const response = await fetch('/api/feedback', {
         method: 'POST',
@@ -264,7 +337,7 @@ export function StudentDiscovery() {
         },
         body: JSON.stringify({
           eventId: parseInt(eventId),
-          studentId: CURRENT_STUDENT_ID,
+          studentId: currentStudentId,
           rating: rating,
           comment: comment || null,
         }),
@@ -300,14 +373,23 @@ export function StudentDiscovery() {
     return (
       <div className="space-y-8 pb-20 lg:pb-8">
         <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-muted-foreground">Loading events...</p>
+          <div className="inline-block w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-purple-200">Loading events...</p>
         </div>
       </div>
     );
   }
+
   return (
     <div className="space-y-8 pb-20 lg:pb-8">
+      {/* Student Selector */}
+      <StudentSelector
+        selectedStudentId={currentStudentId}
+        onStudentChange={handleStudentChange}
+        students={students}
+        loading={studentsLoading}
+      />
+      
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -340,77 +422,24 @@ export function StudentDiscovery() {
         />
       </div>
 
-      {/* Featured Events */}
-      {featuredEvents.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl lg:text-3xl font-bold text-foreground">
-              🌟 Featured Events
-            </h2>
-            <button className="text-accent hover:text-accent/80 font-medium transition-colors">
-              View All →
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {featuredEvents.map((event, index) => (
-              <div
-                key={event.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <EventCard 
-                  event={event} 
-                  isRegistered={registeredEventIds.has(event.id)}
-                  onRegister={() => handleRegister(event.id)}
-                  onFeedback={(rating, comment) => handleFeedback(event.id, rating, comment)}
-                  hasFeedbackSubmitted={submittedFeedbackIds.has(event.id)}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* All Events */}
+    {/* Featured Events */}
+    {featuredEvents.length > 0 && (
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
-            📅 All Events
+          <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+            🌟 Featured Events
           </h2>
-          
-          <div className="flex items-center space-x-4">
-            <select className="glass rounded-lg px-4 py-2 text-sm border border-white/20 focus:border-accent transition-colors">
-              <option>Sort by Date</option>
-              <option>Sort by Popularity</option>
-              <option>Sort by Category</option>
-            </select>
-            
-            <div className="flex items-center space-x-2">
-              <button className="p-2 glass rounded-lg hover:glass-strong transition-all">
-                <div className="grid grid-cols-2 gap-1 w-4 h-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-current rounded-sm"></div>
-                  ))}
-                </div>
-              </button>
-              <button className="p-2 glass rounded-lg hover:glass-strong transition-all">
-                <div className="grid grid-cols-1 gap-1 w-4 h-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="bg-current rounded-sm"></div>
-                  ))}
-                </div>
-              </button>
-            </div>
-          </div>
+          <button className="text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200 font-medium transition-colors">
+            View All →
+          </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {regularEvents.map((event, index) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {featuredEvents.map((event, index) => (
             <div
               key={event.id}
               className="animate-fade-in-up"
-              style={{ animationDelay: `${index * 100}ms` }}
+              style={{ animationDelay: `${index * 150}ms` }}
             >
               <EventCard 
                 event={event} 
@@ -422,16 +451,69 @@ export function StudentDiscovery() {
             </div>
           ))}
         </div>
-        
-        {/* Show message if no events */}
-        {events.length === 0 && (
-          <div className="text-center py-12 glass rounded-2xl">
-            <div className="text-6xl mb-4">📅</div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">No Events Available</h3>
-            <p className="text-muted-foreground">Check back later for upcoming events!</p>
-          </div>
-        )}
       </section>
-    </div>
+    )}
+
+    {/* All Events */}
+    <section>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          📅 All Events
+        </h2>
+        
+        <div className="flex items-center space-x-4">
+          <select className="glass rounded-lg px-4 py-2 text-sm border border-white/20 focus:border-purple-400 transition-colors text-gray-900 dark:text-white bg-white/50 dark:bg-white/10">
+            <option>Sort by Date</option>
+            <option>Sort by Popularity</option>
+            <option>Sort by Category</option>
+          </select>
+          
+          <div className="flex items-center space-x-2">
+            <button className="p-2 glass rounded-lg hover:glass-strong transition-all">
+              <div className="grid grid-cols-2 gap-1 w-4 h-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="bg-current rounded-sm"></div>
+                ))}
+              </div>
+            </button>
+            <button className="p-2 glass rounded-lg hover:glass-strong transition-all">
+              <div className="grid grid-cols-1 gap-1 w-4 h-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-current rounded-sm"></div>
+                ))}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {regularEvents.map((event, index) => (
+          <div
+            key={event.id}
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <EventCard 
+              event={event} 
+              isRegistered={registeredEventIds.has(event.id)}
+              onRegister={() => handleRegister(event.id)}
+              onFeedback={(rating, comment) => handleFeedback(event.id, rating, comment)}
+              hasFeedbackSubmitted={submittedFeedbackIds.has(event.id)}
+            />
+          </div>
+        ))}
+      </div>
+      
+      {/* Show message if no events */}
+      {events.length === 0 && (
+        <div className="text-center py-12 glass rounded-2xl">
+          <div className="text-6xl mb-4">📅</div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Events Available</h3>
+          <p className="text-purple-700 dark:text-purple-200">Check back later for upcoming events!</p>
+        </div>
+      )}
+    </section>
+  </div>
   );
 }

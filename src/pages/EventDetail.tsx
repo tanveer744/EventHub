@@ -48,6 +48,15 @@ interface FeedbackData {
   given_at: string;
 }
 
+interface AttendanceData {
+  id: number;
+  registration_id: number;
+  present: boolean;
+  marked_at: string;
+  student_id: number;
+  event_id: number;
+}
+
 interface RegistrationData {
   id: number;
   event_id: number;
@@ -103,20 +112,43 @@ const EventDetail: React.FC = () => {
       const feedbackResponse = await fetch(`/api/feedback?eventId=${id}`);
       const feedbackData = feedbackResponse.ok ? await feedbackResponse.json() : [];
       
-      // Combine registration data with feedback
+      // Fetch existing attendance for this event
+      const attendanceResponse = await fetch(`/api/attendance?eventId=${id}`);
+      const attendanceData = attendanceResponse.ok ? await attendanceResponse.json() : [];
+      
+      // Create attendance lookup by registration_id
+      const attendanceMap = attendanceData.reduce((acc: Record<number, AttendanceData>, att: AttendanceData) => {
+        acc[att.registration_id] = att;
+        return acc;
+      }, {});
+      
+      // Combine registration data with feedback and attendance
       const enrichedRegistrations = regsData.map((reg: RegistrationData) => {
         const feedback = feedbackData.find((f: FeedbackData) => f.student_id === reg.student_id);
+        const attendance = attendanceMap[reg.id];
         return {
           ...reg,
           feedback: feedback ? {
             rating: feedback.rating,
             comment: feedback.comment,
             given_at: feedback.given_at
+          } : undefined,
+          attendance: attendance ? {
+            present: attendance.present,
+            marked_at: attendance.marked_at
           } : undefined
         };
       });
       
       setRegistrations(enrichedRegistrations);
+      
+      // Initialize attendance updates state with existing attendance
+      const initialAttendanceState = attendanceData.reduce((acc: Record<number, boolean>, att: AttendanceData) => {
+        acc[att.registration_id] = att.present;
+        return acc;
+      }, {});
+      setAttendanceUpdates(initialAttendanceState);
+      
     } catch (error) {
       console.error('Error fetching registrations:', error);
       toast({
@@ -140,6 +172,17 @@ const EventDetail: React.FC = () => {
   }, [id, fetchEventDetails, fetchRegistrations]);
 
   const handleAttendanceChange = async (registrationId: number, present: boolean) => {
+    // Check if attendance is already marked as present
+    const registration = registrations.find(r => r.id === registrationId);
+    if (registration?.attendance?.present) {
+      toast({
+        title: "Cannot Change Attendance",
+        description: "Attendance cannot be revoked once marked as present",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const response = await fetch('/api/attendance/mark', {
         method: 'POST',
@@ -153,7 +196,8 @@ const EventDetail: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to mark attendance');
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || 'Failed to mark attendance');
       }
 
       // Update local state
@@ -161,6 +205,19 @@ const EventDetail: React.FC = () => {
         ...prev,
         [registrationId]: present
       }));
+
+      // Update the registration in state to reflect the new attendance
+      setRegistrations(prev => prev.map(reg => 
+        reg.id === registrationId 
+          ? { 
+              ...reg, 
+              attendance: { 
+                present, 
+                marked_at: new Date().toISOString() 
+              } 
+            }
+          : reg
+      ));
 
       toast({
         title: "Success",
@@ -170,7 +227,7 @@ const EventDetail: React.FC = () => {
       console.error('Error marking attendance:', error);
       toast({
         title: "Error",
-        description: "Failed to mark attendance",
+        description: error instanceof Error ? error.message : "Failed to mark attendance",
         variant: "destructive",
       });
     }
@@ -296,13 +353,31 @@ const EventDetail: React.FC = () => {
                         <td className="py-4 px-2 text-white font-medium">{registration.full_name}</td>
                         <td className="py-4 px-2 text-purple-200">{registration.email}</td>
                         <td className="py-4 px-2 text-center">
-                          <Checkbox
-                            checked={attendanceUpdates[registration.id] ?? false}
-                            onCheckedChange={(checked) => 
-                              handleAttendanceChange(registration.id, checked as boolean)
-                            }
-                            className="bg-white/10 border-white/30 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                          />
+                          <div className="flex flex-col items-center gap-1">
+                            <Checkbox
+                              checked={attendanceUpdates[registration.id] ?? false}
+                              disabled={registration.attendance?.present === true}
+                              onCheckedChange={(checked) => 
+                                handleAttendanceChange(registration.id, checked as boolean)
+                              }
+                              className={`bg-white/10 border-white/30 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600 ${
+                                registration.attendance?.present === true 
+                                  ? 'opacity-50 cursor-not-allowed' 
+                                  : ''
+                              }`}
+                            />
+                            {registration.attendance?.present && (
+                              <div className="text-xs text-green-300 flex items-center gap-1">
+                                <span>✓</span>
+                                <span>Marked</span>
+                              </div>
+                            )}
+                            {registration.attendance?.marked_at && (
+                              <div className="text-xs text-purple-300">
+                                {new Date(registration.attendance.marked_at).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="py-4 px-2">
                           {registration.feedback ? (

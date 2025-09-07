@@ -39,6 +39,18 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
   const [feedbackRating, setFeedbackRating] = useState<string>('');
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleRegisterClick = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const confirmRegistration = () => {
+    setShowConfirmDialog(false);
+    setIsConfirming(true);
+    onRegister?.();
+  };
 
   const handleFeedbackSubmit = () => {
     if (feedbackRating && onFeedback) {
@@ -125,8 +137,8 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
                   ? 'bg-green-600 text-white hover:bg-green-700 cursor-default' 
                   : 'btn-hero'
               }`}
-              onClick={isRegistered ? undefined : onRegister}
-              disabled={isRegistered || isLoading}
+              onClick={isRegistered ? undefined : handleRegisterClick}
+              disabled={isRegistered || isLoading || isConfirming}
             >
               {isLoading ? (
                 <>
@@ -136,7 +148,7 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
               ) : isRegistered ? (
                 <>
                   <span className="mr-2">✓</span>
-                  Already Registered
+                  Registered
                 </>
               ) : (
                 'Register Now'
@@ -297,14 +309,14 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
                 ? 'bg-green-600 text-white hover:bg-green-700 cursor-default' 
                 : 'btn-hero shimmer'
             }`}
-            onClick={isRegistered ? undefined : onRegister}
-            disabled={isRegistered}
+            onClick={isRegistered ? undefined : handleRegisterClick}
+            disabled={isRegistered || isConfirming}
           >
             <span className="relative z-10 flex items-center justify-center">
               {isRegistered ? (
                 <>
                   <span className="mr-2">✓</span>
-                  Already Registered
+                  Registered
                 </>
               ) : (
                 <>
@@ -390,6 +402,42 @@ export function EventCard({ event, variant = 'default', className = '', isRegist
           )}
         </div>
       </div>
+      
+      {/* Registration Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="glass border border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center mb-2">Confirm Registration</DialogTitle>
+            <p className="text-center text-muted-foreground mb-6">
+              Are you sure you want to register for <span className="font-semibold text-foreground">{event.title}</span>?
+            </p>
+          </DialogHeader>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmDialog(false)}
+              className="glass hover:glass-strong px-6 py-2 flex-1 sm:flex-none"
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmRegistration}
+              className="btn-hero px-6 py-2 flex-1 sm:flex-none"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Registering...
+                </>
+              ) : (
+                'Yes, Register Me'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

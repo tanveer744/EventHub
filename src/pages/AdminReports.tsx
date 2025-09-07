@@ -325,7 +325,7 @@ const AdminReports: React.FC = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Student Participation Report
+                Top 3 Most Active Students
               </CardTitle>
             </CardHeader>
             <CardContent>
